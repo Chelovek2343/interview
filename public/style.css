@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 10px;
+}
+
+.layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#requestForm {
+    flex: 1;
+}
+
+#sidebar {
+    width: 280px;
+    position: sticky;
+    top: 10px;
+    border: 1px solid #999;
+    padding: 10px;
+}
+
+fieldset {
+    margin-bottom: 15px;
+}
+
+input[type=text],
+input[type=number],
+input[type=url],
+input[type=datetime-local],
+textarea,
+select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.row {
+    display: flex;
+    gap: 5px;
+}
+
+#participants label,
+#systems label,
+#problemTypes label {
+    display: block;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+th,
+td {
+    border: 1px solid #999;
+    padding: 3px;
+}
+
+.error {
+    border: 2px solid red;
+}
+
+#checklist {
+    list-style: none;
+    padding-left: 0;
+}
+
+#checklist li {
+    cursor: pointer;
+    padding: 2px 0;
+}
+
+#checklist li.done {
+    color: green;
+}
+
+.big {
+    font-size: 24px;
+    font-weight: bold;
+}
+.error-text { color: red; font-size: 12px; margin: 2px 0; }
+#message.err { color: red; }
+#message.ok { color: green; }

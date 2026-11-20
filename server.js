@@ -23,11 +23,25 @@ app.get('/api/requests', (req, res) => {
 });
 
 app.post('/api/requests', (req, res) => {
+  const b = req.body;
+
+  // Сервер не доверяет клиенту: базовая проверка дублирует форму
+  if (!['new', 'improve', 'bug'].includes(b.kind)) {
+    return res.status(400).json({ error: 'Неверный тип задачи' });
+  }
+  if (!b.title || !b.title.trim()) {
+    return res.status(400).json({ error: 'Укажите название задачи' });
+  }
+  if (!b.contact || !b.contact.name || !b.contact.dept || !b.contact.phone) {
+    return res.status(400).json({ error: 'Укажите контактное лицо' });
+  }
+
   const list = readData();
   const now = new Date().toISOString();
   const item = {
-    ...req.body,
+    ...b,
     id: crypto.randomUUID(),
+    author: req.get('X-User') || 'anonymous',
     status: 'new',
     analystNote: '',
     createdAt: now,
