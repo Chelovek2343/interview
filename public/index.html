@@ -8,6 +8,22 @@
 <body>
   <h1>Заявки на автоматизацию</h1>
 
+    <div id="topbar">
+    <label>Роль:
+      <select id="roleSelect">
+        <option value="employee">Сотрудник</option>
+        <option value="analyst">Аналитик (ОРАБС)</option>
+      </select>
+    </label>
+    <label>Пользователь (латиницей):
+      <input type="text" id="userInput" size="10">
+    </label>
+  </div>
+  <nav id="nav"></nav>
+
+  <section id="view-new">
+  <p id="editBanner" hidden></p>
+
   <div class="layout">
     <form id="requestForm" novalidate>
 
@@ -192,6 +208,7 @@
       <p id="message"></p>
       <button type="submit">Отправить заявку</button>
       <button type="button" id="clearForm">Очистить форму</button>
+            <button type="button" id="cancelEdit" hidden>Отменить изменение</button>
     </form>
 
     <aside id="sidebar">
@@ -201,6 +218,11 @@
       <ul id="checklist"></ul>
     </aside>
   </div>
+
+    </section>
+  <section id="view-my" hidden></section>
+  <section id="view-all" hidden></section>
+  <section id="view-card" hidden></section>
 
   <!-- Шаблоны строк для динамических таблиц: на странице не показываются -->
   <template id="stepRowTpl">
@@ -226,6 +248,7 @@
     </tr>
   </template>
 
-  <script src="app.js"></script>
+    <script src="app.js"></script>
+  <script src="screens.js"></script>
 </body>
 </html>

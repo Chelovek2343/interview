@@ -85,3 +85,12 @@ td {
 .error-text { color: red; font-size: 12px; margin: 2px 0; }
 #message.err { color: red; }
 #message.ok { color: green; }
+
+#topbar { margin-bottom: 10px; }
+#topbar label { margin-right: 15px; }
+#nav { margin-bottom: 15px; }
+#nav button, .filters button { padding: 5px 12px; margin-right: 5px; }
+#nav button.active, .filters button.active { font-weight: bold; background: #ddd; }
+.err { color: red; }
+.ok, #flash { color: green; }
+.filters { margin-bottom: 10px; }
