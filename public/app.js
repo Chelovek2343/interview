@@ -11,17 +11,8 @@ const anyChecked = (name) =>
     form.querySelectorAll(`[name="${name}"]:checked`).length > 0;
 
 function escapeHtml(s) {
-    return s.replace(
-        /[&<>"']/g,
-        (c) =>
-            ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;',
-            })[c],
-    );
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // ---------- Динамические таблицы ----------

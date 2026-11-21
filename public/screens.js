@@ -186,7 +186,12 @@ async function renderAll() {
   }
   newCount = allCache.filter((r) => r.status === 'new').length;
   renderNav();
-  drawAll();
+    try {
+    drawAll();
+  } catch (err) {
+    console.error(err);
+    box.innerHTML = `<p class="err">Ошибка отображения: ${esc(err.message)}</p>`;
+  }
 }
 
 function drawAll() {

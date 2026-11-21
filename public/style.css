@@ -145,3 +145,8 @@ td {
     display: block;
     height: 100%;
 }
+
+#topbar select,
+#topbar input {
+    width: auto;
+}
