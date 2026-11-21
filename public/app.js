@@ -108,8 +108,16 @@ function renderCalc() {
                 `<li>${escapeHtml(r.role)}: ${r.hours.toFixed(1)} ч (${Math.round(r.share * 100)}%)</li>`,
         )
         .join('');
+    const COLORS = ['#777', '#aaa', '#555', '#ccc'];
+    const bar = c.byRole
+        .map(
+            (r, i) =>
+                `<span style="width:${(r.share * 100).toFixed(1)}%;background:${COLORS[i % COLORS.length]}"></span>`,
+        )
+        .join('');
     box.innerHTML = `
     <div class="big">${c.hoursMonth.toFixed(1)} ч в месяц</div>
+    <div class="bar">${bar}</div>
     <div>${c.hoursYear.toFixed(1)} ч в год</div>
     <div>${c.totalMin} чел-мин на операцию</div>
     <ul>${items}</ul>`;
@@ -449,40 +457,51 @@ $('#fillRoles').addEventListener('click', () => {
 
 // ---------- Отправка и очистка ----------
 form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  showErrors = true;
-  const failed = validate();
-  if (failed.length) {
-    showMessage(`Заполните отмеченные поля: ${failed.length}`, true);
-    $(failed[0].target).scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-  const isEdit = editingId !== null;
-  try {
-    await api(
-      isEdit ? 'PUT' : 'POST',
-      isEdit ? `/api/requests/${editingId}` : '/api/requests',
-      collectData()
+    e.preventDefault();
+    showErrors = true;
+    const failed = validate();
+    if (failed.length) {
+        showMessage(`Заполните отмеченные поля: ${failed.length}`, true);
+        $(failed[0].target).scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+        return;
+    }
+    const isEdit = editingId !== null;
+    try {
+        await api(
+            isEdit ? 'PUT' : 'POST',
+            isEdit ? `/api/requests/${editingId}` : '/api/requests',
+            collectData(),
+        );
+    } catch (err) {
+        showMessage(
+            'Не удалось отправить: ' +
+                err.message +
+                '. Введённые данные сохранены.',
+            true,
+        );
+        return;
+    }
+    if (isEdit) {
+        leaveEditMode();
+    } else {
+        resetForm();
+        localStorage.removeItem(DRAFT_KEY);
+    }
+    showMessage('');
+    showView(
+        'my',
+        isEdit ? 'Заявка обновлена и отправлена повторно' : 'Заявка отправлена',
     );
-  } catch (err) {
-    showMessage('Не удалось отправить: ' + err.message + '. Введённые данные сохранены.', true);
-    return;
-  }
-  if (isEdit) {
-    leaveEditMode();
-  } else {
-    resetForm();
-    localStorage.removeItem(DRAFT_KEY);
-  }
-  showMessage('');
-  showView('my', isEdit ? 'Заявка обновлена и отправлена повторно' : 'Заявка отправлена');
 });
 
 $('#clearForm').addEventListener('click', () => {
-  if (!confirm('Очистить форму?')) return;
-  resetForm();
-  if (editingId === null) localStorage.removeItem(DRAFT_KEY);
-  showMessage('');
+    if (!confirm('Очистить форму?')) return;
+    resetForm();
+    if (editingId === null) localStorage.removeItem(DRAFT_KEY);
+    showMessage('');
 });
 
 // ---------- Старт ----------

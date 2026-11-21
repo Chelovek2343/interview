@@ -20,6 +20,7 @@ let newCount = 0;
 let myCache = [];
 let allCache = [];
 let statusFilter = 'all';
+let currentCard = null; // заявка, открытая в карточке
 
 async function api(method, url, body) {
   const res = await fetch(url, {
@@ -309,12 +310,14 @@ function cardHtml(r) {
     <p><select id="cardStatus">${options}</select></p>
     <p><textarea id="cardNote" rows="3" placeholder="Комментарий автору">${esc(r.analystNote || '')}</textarea></p>
     <button type="button" id="saveStatus" data-id="${esc(r.id)}">Сохранить статус</button>
+        <button type="button" id="exportBtn">Скачать для БТ</button>
     <button type="button" id="backToList">← К списку</button>
     <p id="cardMessage"></p>`;
   return html;
 }
 
 function showCard(r) {
+  currentCard = r;
   $('#view-card').innerHTML = cardHtml(r);
   showView('card');
 }
@@ -323,10 +326,14 @@ $('#view-card').addEventListener('click', async (e) => {
   if (e.target.id === 'backToList') {
     showView('all');
   }
+  if (e.target.id === 'exportBtn' && currentCard) {
+    downloadFile(`zayavka-${currentCard.id.slice(0, 8)}.md`, toMarkdown(currentCard));
+  }
   if (e.target.id === 'saveStatus') {
     const msg = $('#cardMessage');
     try {
-      await api('PATCH', `/api/requests/${e.target.dataset.id}`, {
+      // сервер возвращает обновлённую заявку: выгрузка будет с актуальным комментарием
+      currentCard = await api('PATCH', `/api/requests/${e.target.dataset.id}`, {
         status: $('#cardStatus').value,
         analystNote: $('#cardNote').value
       });
@@ -338,6 +345,88 @@ $('#view-card').addEventListener('click', async (e) => {
     }
   }
 });
+
+// ---------- Выгрузка для БТ (ТЗ, п. 8) ----------
+const mdCell = (s) => String(s == null ? '' : s).replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+const mdText = (s) => (s ? String(s) : '—');
+const mdList = (arr, other) => {
+  const all = (arr || []).concat(other ? [other] : []);
+  return all.length ? all.join(', ') : '—';
+};
+
+function toMarkdown(r) {
+  const c = r.contact || {};
+  const L = [];
+  L.push(`# ${r.title}`, '');
+  L.push(`Статус заявки: ${STATUS_NAMES[r.status]}`, '');
+  L.push('## Тип задачи', '', KIND_NAMES[r.kind] + (r.kindModule ? `, модуль: ${r.kindModule}` : ''), '');
+  L.push('## Контактное лицо', '', `${c.name}, ${c.dept}, ${c.phone}`, '');
+
+  if (r.kind === 'bug') {
+    const b = r.bug || {};
+    L.push('## Описание ошибки', '');
+    L.push(`- Где возникает: ${mdText(b.where)}`);
+    L.push(`- Шаги воспроизведения: ${mdText(b.steps)}`);
+    L.push(`- Ожидалось: ${mdText(b.expected)}`);
+    L.push(`- Произошло: ${mdText(b.actual)}`);
+    L.push(`- Когда: ${mdText(b.when)}`);
+    L.push(`- Критичность: ${SEVERITY_NAMES[b.severity] || '—'}`);
+    L.push(`- Затронуто: ${mdText(b.affected)}`);
+    L.push(`- Ссылки: ${mdText(b.links)}`, '');
+  } else {
+    L.push('## Текущий процесс', '', '| Кто | Что делает | Где |', '|---|---|---|');
+    (r.steps || []).forEach((s) => L.push(`| ${mdCell(s.who)} | ${mdCell(s.what)} | ${mdCell(s.where)} |`));
+    L.push('');
+    L.push('## Участники и системы', '');
+    L.push(`- Участники: ${mdList(r.participants, r.otherPart)}`);
+    L.push(`- Системы и документы: ${mdList(r.systems, r.otherSys)}`, '');
+
+    L.push('## Объём и время', '');
+    L.push(`Частота: ${r.freq ? r.freq.n + ' ' + (PERIOD_NAMES[r.freq.period] || '') : '—'}`, '');
+    const calcRes = calcFrom(r.freq || {}, r.roleTimes || []);
+    L.push('| Участник | Минут на операцию | Часов в месяц |', '|---|---|---|');
+    if (calcRes) {
+      calcRes.byRole.forEach((x) => L.push(`| ${mdCell(x.role)} | ${x.min} | ${x.hours.toFixed(1)} |`));
+      L.push(`| **Итого** | **${calcRes.totalMin}** | **${calcRes.hoursMonth.toFixed(1)}** |`, '');
+      L.push(`Оценка: ${calcRes.hoursMonth.toFixed(1)} ч в месяц, ${calcRes.hoursYear.toFixed(1)} ч в год`, '');
+    } else {
+      L.push('| нет данных | | |', '');
+    }
+    const w = r.wait || {};
+    L.push(`Ожидание: ${w.min != null ? w.min : '—'} мин (${w.who || '—'})`, '');
+
+    const p = r.problems || {};
+    L.push('## Проблемы', '');
+    L.push(`- Типы: ${mdList(p.types)}`);
+    L.push(`- Пример: ${mdText(p.example)}`, '');
+    L.push('## Проводки, документы и отчёты', '', mdText(r.documents), '');
+    L.push('## Целевой процесс', '', mdText(r.tobe), '');
+    L.push('## Правила и расчёты', '', mdText(r.rules));
+    if (r.rulesLink) L.push('', `Ссылка: ${r.rulesLink}`);
+    L.push('');
+
+    const o = r.opt || {};
+    L.push('## Дополнительно', '');
+    L.push(`- Клиент: ${mdText(o.client)}`);
+    L.push(`- Доход или объём: ${mdText(o.income)}`);
+    L.push(`- Потери: ${mdText(o.losses)}`);
+    L.push(`- Как поймём, что стало лучше: ${mdText(o.target)}`);
+    L.push(`- Срок или регулятор: ${mdText(o.deadline)}`);
+    L.push(`- Ссылки: ${mdText(o.links)}`, '');
+  }
+
+  L.push('## Комментарий аналитика', '', mdText(r.analystNote), '');
+  return L.join('\n');
+}
+
+function downloadFile(name, content) {
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 // ---------- Переключатель роли и пользователя ----------
 function startView() {
