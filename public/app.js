@@ -11,8 +11,17 @@ const anyChecked = (name) =>
     form.querySelectorAll(`[name="${name}"]:checked`).length > 0;
 
 function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return String(s == null ? '' : s).replace(
+        /[&<>"']/g,
+        (c) =>
+            ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[c],
+    );
 }
 
 // ---------- Динамические таблицы ----------
@@ -37,6 +46,7 @@ function getRoleTimes() {
         (tr) => ({
             role: tr.querySelector('.role-name').value.trim(),
             min: Number(tr.querySelector('.role-min').value),
+            kind: tr.querySelector('.role-kind').value,
         }),
     );
 }
@@ -50,23 +60,81 @@ function updateKind() {
 }
 
 // ---------- Расчёт трудозатрат (ТЗ, п. 6) ----------
-function calcFrom(freq, roleTimes) {
-    const n = Number(freq.n);
-    const mult = PERIOD_MULT[freq.period];
-    const roles = roleTimes.filter((r) => r.role && r.min > 0);
-    const totalMin = roles.reduce((sum, r) => sum + r.min, 0);
-    if (!(n > 0) || !mult || totalMin === 0) return null;
+const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+const fmt1 = (n) => n.toFixed(1);
 
-    const opsPerMonth = n * mult;
-    const hoursMonth = (opsPerMonth * totalMin) / 60;
+// Диапазон в скобках; пустая строка, если нет времени «на единицу»
+function rangeSuffix(c, key, f = fmt1) {
+    if (!c.hasUnits) return '';
+    const [lo, hi] = c.range[key];
+    return ` (от ${f(lo)} до ${f(hi)})`;
+}
+
+function minCell(c, x) {
+    const [lo, hi] = x.minRange;
+    return (
+        fmt(x.min) + (c.hasUnits && lo !== hi ? ` (${fmt(lo)}–${fmt(hi)})` : '')
+    );
+}
+
+// Основные поля результата (totalMin, hoursMonth, byRole[].min и т. д.) считаются по СРЕДНЕМУ.
+// Диапазон лежит отдельно в range и в minRange.
+function calcFrom(freq, roleTimes, units) {
+    const n = Number(freq && freq.n);
+    const mult = freq ? PERIOD_MULT[freq.period] : undefined;
+    if (!(n > 0) || !mult) return null;
+
+    const u = units || {};
+    const vals = [Number(u.min) || 0, Number(u.max) || 0].filter((x) => x > 0);
+    const lo = vals.length ? Math.min(...vals) : 0;
+    const hi = vals.length ? Math.max(...vals) : 0;
+    const mid = (lo + hi) / 2;
+
+    // У одного участника может быть две строки: «на операцию» и «на единицу». Складываем по имени.
+    const byName = new Map();
+    roleTimes
+        .filter((r) => r.role && r.min > 0)
+        .forEach((r) => {
+            const e = byName.get(r.role) || {
+                role: r.role,
+                fixed: 0,
+                perUnit: 0,
+            };
+            if (r.kind === 'unit') e.perUnit += r.min;
+            else e.fixed += r.min;
+            byName.set(r.role, e);
+        });
+    const roles = [...byName.values()].map((e) => ({
+        role: e.role,
+        perUnit: e.perUnit,
+        min: e.fixed + e.perUnit * mid,
+        minRange: [e.fixed + e.perUnit * lo, e.fixed + e.perUnit * hi],
+    }));
+
+    const sum = (f) => roles.reduce((s, r) => s + f(r), 0);
+    const totalMin = sum((r) => r.min);
+    if (totalMin === 0) return null;
+    const totalLo = sum((r) => r.minRange[0]);
+    const totalHi = sum((r) => r.minRange[1]);
+
+    const ops = n * mult;
+    const toMonth = (m) => (ops * m) / 60;
+
     return {
         totalMin,
-        hoursMonth,
-        hoursYear: hoursMonth * 12,
+        hoursMonth: toMonth(totalMin),
+        hoursYear: toMonth(totalMin) * 12,
+        hasUnits: hi > 0 && roles.some((r) => r.perUnit > 0),
+        range: {
+            totalMin: [totalLo, totalHi],
+            hoursMonth: [toMonth(totalLo), toMonth(totalHi)],
+            hoursYear: [toMonth(totalLo) * 12, toMonth(totalHi) * 12],
+        },
         byRole: roles.map((r) => ({
             role: r.role,
             min: r.min,
-            hours: (opsPerMonth * r.min) / 60,
+            minRange: r.minRange,
+            hours: toMonth(r.min),
             share: r.min / totalMin,
         })),
     };
@@ -79,6 +147,10 @@ function calc() {
             period: form.elements['freq.period'].value,
         },
         getRoleTimes(),
+        {
+            min: form.elements['unitsMin'].value,
+            max: form.elements['unitsMax'].value,
+        },
     );
 }
 
@@ -93,12 +165,6 @@ function renderCalc() {
         box.textContent = '— Заполните раздел 3 (п. 7 и п. 8)';
         return;
     }
-    const items = c.byRole
-        .map(
-            (r) =>
-                `<li>${escapeHtml(r.role)}: ${r.hours.toFixed(1)} ч (${Math.round(r.share * 100)}%)</li>`,
-        )
-        .join('');
     const COLORS = ['#777', '#aaa', '#555', '#ccc'];
     const bar = c.byRole
         .map(
@@ -106,11 +172,18 @@ function renderCalc() {
                 `<span style="width:${(r.share * 100).toFixed(1)}%;background:${COLORS[i % COLORS.length]}"></span>`,
         )
         .join('');
+    const items = c.byRole
+        .map(
+            (r) =>
+                `<li>${escapeHtml(r.role)}: ${r.hours.toFixed(1)} ч (${Math.round(r.share * 100)}%)</li>`,
+        )
+        .join('');
     box.innerHTML = `
     <div class="big">${c.hoursMonth.toFixed(1)} ч в месяц</div>
+    ${c.hasUnits ? `<div>${rangeSuffix(c, 'hoursMonth').trim()}, по среднему числу единиц</div>` : ''}
     <div class="bar">${bar}</div>
-    <div>${c.hoursYear.toFixed(1)} ч в год</div>
-    <div>${c.totalMin} чел-мин на операцию</div>
+    <div>${c.hoursYear.toFixed(1)} ч в год${rangeSuffix(c, 'hoursYear')}</div>
+    <div>${fmt(c.totalMin)} чел-мин на операцию${rangeSuffix(c, 'totalMin', fmt)}</div>
     <ul>${items}</ul>`;
 }
 
@@ -171,7 +244,17 @@ const RULES = [
         label: '8. Время по участникам',
         scope: 'process',
         target: '#roleTimesTable',
-        ok: () => getRoleTimes().some((r) => r.role && r.min > 0),
+        ok: () => {
+            const rows = getRoleTimes().filter((r) => r.role && r.min > 0);
+            if (rows.length === 0) return false;
+            if (rows.some((r) => r.kind === 'unit')) {
+                // есть время «на единицу»: нужен диапазон единиц
+                const a = Number(val('unitsMin'));
+                const b = Number(val('unitsMax'));
+                return a > 0 && b > 0 && a <= b;
+            }
+            return true;
+        },
     },
     {
         label: '9. Ожидание',
@@ -329,6 +412,11 @@ function collectData() {
         });
         data.steps = getSteps().filter((s) => s.who || s.what); // п. 7 ТЗ: пустые строки отбрасываем
         data.roleTimes = getRoleTimes().filter((r) => r.role || r.min > 0);
+        if (!data.roleTimes.some((r) => r.kind === 'unit')) {
+            delete data.unitsName;
+            delete data.unitsMin;
+            delete data.unitsMax; // единицы нужны, только если есть время «на единицу»
+        }
     }
     return data;
 }
@@ -390,6 +478,7 @@ function loadDraft() {
         const row = addRow('roleRowTpl', '#roleTimesTable tbody');
         row.querySelector('.role-name').value = r.role || '';
         row.querySelector('.role-min').value = r.min || '';
+        row.querySelector('.role-kind').value = r.kind || 'op';
     });
     return true;
 }

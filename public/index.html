@@ -1,254 +1,634 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <title>Заявки на автоматизацию</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>Заявки на автоматизацию</h1>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Заявки на автоматизацию</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <h1>Заявки на автоматизацию</h1>
 
-    <div id="topbar">
-    <label>Роль:
-      <select id="roleSelect">
-        <option value="employee">Сотрудник</option>
-        <option value="analyst">Аналитик (ОРАБС)</option>
-      </select>
-    </label>
-    <label>Пользователь (латиницей):
-      <input type="text" id="userInput" size="10">
-    </label>
-  </div>
-  <nav id="nav"></nav>
-
-  <section id="view-new">
-  <p id="editBanner" hidden></p>
-
-  <div class="layout">
-    <form id="requestForm" novalidate>
-
-      <fieldset>
-        <legend>Раздел 1. О задаче</legend>
-        <p><label>Тип задачи *<br>
-          <select name="kind" id="kind">
-            <option value="">Выберите тип</option>
-            <option value="new">Новый функционал</option>
-            <option value="improve">Доработка действующего функционала</option>
-            <option value="bug">Баг (ошибка в действующем функционале)</option>
-          </select>
-        </label></p>
-        <p id="kindModuleBox"><label>В каком функционале или модуле *<br>
-          <input type="text" name="kindModule" maxlength="200">
-        </label></p>
-        <p><label>Название задачи *<br>
-          <input type="text" name="title" maxlength="200">
-        </label></p>
-        <p>Контактное лицо *</p>
-        <div class="row">
-          <input type="text" name="contact.name" placeholder="ФИО">
-          <input type="text" name="contact.dept" placeholder="Подразделение">
-          <input type="text" name="contact.phone" placeholder="Телефон">
+        <div id="topbar">
+            <label
+                >Роль:
+                <select id="roleSelect">
+                    <option value="employee">Сотрудник</option>
+                    <option value="analyst">Аналитик (ОРАБС)</option>
+                </select>
+            </label>
+            <label
+                >Пользователь (латиницей):
+                <input type="text" id="userInput" size="10" />
+            </label>
         </div>
-      </fieldset>
+        <nav id="nav"></nav>
 
-      <!-- Разделы 2-6: для типа "Баг" JS скроет весь этот блок -->
-      <div id="processSections">
+        <section id="view-new">
+            <p id="editBanner" hidden></p>
 
-        <fieldset>
-          <legend>Раздел 2. Как процесс идёт сейчас</legend>
+            <div class="layout">
+                <form id="requestForm" novalidate>
+                    <fieldset>
+                        <legend>Раздел 1. О задаче</legend>
+                        <p>
+                            <label
+                                >Тип задачи *<br />
+                                <select name="kind" id="kind">
+                                    <option value="">Выберите тип</option>
+                                    <option value="new">
+                                        Новый функционал
+                                    </option>
+                                    <option value="improve">
+                                        Доработка действующего функционала
+                                    </option>
+                                    <option value="bug">
+                                        Баг (ошибка в действующем функционале)
+                                    </option>
+                                </select>
+                            </label>
+                        </p>
+                        <p id="kindModuleBox">
+                            <label
+                                >В каком функционале или модуле *<br />
+                                <input
+                                    type="text"
+                                    name="kindModule"
+                                    maxlength="200"
+                                />
+                            </label>
+                        </p>
+                        <p>
+                            <label
+                                >Название задачи *<br />
+                                <input
+                                    type="text"
+                                    name="title"
+                                    maxlength="200"
+                                />
+                            </label>
+                        </p>
+                        <p>Контактное лицо *</p>
+                        <div class="row">
+                            <input
+                                type="text"
+                                name="contact.name"
+                                placeholder="ФИО"
+                            />
+                            <input
+                                type="text"
+                                name="contact.dept"
+                                placeholder="Подразделение"
+                            />
+                            <input
+                                type="text"
+                                name="contact.phone"
+                                placeholder="Телефон"
+                            />
+                        </div>
+                    </fieldset>
 
-          <p>Шаги процесса по порядку *</p>
-          <table id="stepsTable">
-            <thead><tr><th>Кто</th><th>Что делает</th><th>Где</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button type="button" id="addStep">Добавить шаг</button>
+                    <!-- Разделы 2-6: для типа "Баг" JS скроет весь этот блок -->
+                    <div id="processSections">
+                        <fieldset>
+                            <legend>Раздел 2. Как процесс идёт сейчас</legend>
 
-          <p>Кто участвует в процессе *</p>
-          <div id="participants">
-            <label><input type="checkbox" name="participants" value="Фронт-офис"> Фронт-офис</label>
-            <label><input type="checkbox" name="participants" value="Касса"> Касса</label>
-            <label><input type="checkbox" name="participants" value="Бухгалтерия"> Бухгалтерия</label>
-            <label><input type="checkbox" name="participants" value="ОДБО"> ОДБО</label>
-            <label><input type="checkbox" name="participants" value="УОД"> УОД</label>
-            <label><input type="checkbox" name="participants" value="Кредитный отдел"> Кредитный отдел</label>
-            <label><input type="checkbox" name="participants" value="Комплаенс"> Комплаенс</label>
-            <label><input type="checkbox" name="participants" value="ИТ"> ИТ</label>
-          </div>
-          <p><label>Другие подразделения (через запятую)<br>
-            <input type="text" name="otherPart">
-          </label></p>
+                            <p>Шаги процесса по порядку *</p>
+                            <table id="stepsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Кто</th>
+                                        <th>Что делает</th>
+                                        <th>Где</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                            <button type="button" id="addStep">
+                                Добавить шаг
+                            </button>
 
-          <p>Системы и документы, в которых работают сейчас *</p>
-          <div id="systems">
-            <label><input type="checkbox" name="systems" value="АБС"> АБС</label>
-            <label><input type="checkbox" name="systems" value="Excel"> Excel</label>
-            <label><input type="checkbox" name="systems" value="Word"> Word</label>
-            <label><input type="checkbox" name="systems" value="Бумага"> Бумага</label>
-            <label><input type="checkbox" name="systems" value="Чат / мессенджер"> Чат / мессенджер</label>
-            <label><input type="checkbox" name="systems" value="Почта"> Почта</label>
-          </div>
-          <p><label>Другие системы (через запятую)<br>
-            <input type="text" name="otherSys">
-          </label></p>
-        </fieldset>
+                            <p>Кто участвует в процессе *</p>
+                            <div id="participants">
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="Фронт-офис"
+                                    />
+                                    Фронт-офис</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="Касса"
+                                    />
+                                    Касса</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="Бухгалтерия"
+                                    />
+                                    Бухгалтерия</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="ОДБО"
+                                    />
+                                    ОДБО</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="УОД"
+                                    />
+                                    УОД</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="Кредитный отдел"
+                                    />
+                                    Кредитный отдел</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="Комплаенс"
+                                    />
+                                    Комплаенс</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="participants"
+                                        value="ИТ"
+                                    />
+                                    ИТ</label
+                                >
+                            </div>
+                            <p>
+                                <label
+                                    >Другие подразделения (через запятую)<br />
+                                    <input type="text" name="otherPart" />
+                                </label>
+                            </p>
 
-        <fieldset>
-          <legend>Раздел 3. Объём и время</legend>
+                            <p>
+                                Системы и документы, в которых работают сейчас *
+                            </p>
+                            <div id="systems">
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="systems"
+                                        value="АБС"
+                                    />
+                                    АБС</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="systems"
+                                        value="Excel"
+                                    />
+                                    Excel</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="systems"
+                                        value="Word"
+                                    />
+                                    Word</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="systems"
+                                        value="Бумага"
+                                    />
+                                    Бумага</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="systems"
+                                        value="Чат / мессенджер"
+                                    />
+                                    Чат / мессенджер</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="systems"
+                                        value="Почта"
+                                    />
+                                    Почта</label
+                                >
+                            </div>
+                            <p>
+                                <label
+                                    >Другие системы (через запятую)<br />
+                                    <input type="text" name="otherSys" />
+                                </label>
+                            </p>
+                        </fieldset>
 
-          <p>Как часто выполняется операция *</p>
-          <div class="row">
-            <input type="number" name="freq.n" min="1" step="1">
-            <select name="freq.period">
-              <option value="day">в день</option>
-              <option value="week">в неделю</option>
-              <option value="month" selected>в месяц</option>
-              <option value="year">в год</option>
-            </select>
-          </div>
+                        <fieldset>
+                            <legend>Раздел 3. Объём и время</legend>
 
-          <p>Время работы на одну операцию по каждому участнику (только время, когда сотрудник занят; ожидание укажите ниже) *</p>
-          <table id="roleTimesTable">
-            <thead><tr><th>Участник</th><th>Минут</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <button type="button" id="addRole">Добавить участника</button>
-          <button type="button" id="fillRoles">Подставить участников из п. 5</button>
+                            <p>Как часто выполняется операция *</p>
+                            <div class="row">
+                                <input
+                                    type="number"
+                                    name="freq.n"
+                                    min="1"
+                                    step="1"
+                                />
+                                <select name="freq.period">
+                                    <option value="day">в день</option>
+                                    <option value="week">в неделю</option>
+                                    <option value="month" selected>
+                                        в месяц
+                                    </option>
+                                    <option value="year">в год</option>
+                                </select>
+                            </div>
+                            <p>
+                                Если время зависит от количества (платежи,
+                                документы, клиенты), укажите единицу и диапазон
+                                за одну операцию
+                            </p>
+                            <div class="row">
+                                <input
+                                    type="text"
+                                    name="unitsName"
+                                    placeholder="Единица, например: платёж"
+                                />
+                                <input
+                                    type="number"
+                                    name="unitsMin"
+                                    min="1"
+                                    step="1"
+                                    placeholder="от"
+                                />
+                                <input
+                                    type="number"
+                                    name="unitsMax"
+                                    min="1"
+                                    step="1"
+                                    placeholder="до"
+                                />
+                            </div>
 
-          <p>Сколько длится ожидание за одну операцию *</p>
-          <div class="row">
-            <input type="number" name="wait.min" min="0" step="1" value="0">
-            <select name="wait.who">
-              <option value="Клиент">Клиент</option>
-              <option value="Сотрудник">Сотрудник</option>
-              <option value="Клиент и сотрудник">Клиент и сотрудник</option>
-            </select>
-          </div>
-        </fieldset>
+                            <p>
+                                Время работы на одну операцию по каждому
+                                участнику (только время, когда сотрудник занят;
+                                ожидание укажите ниже) *
+                            </p>
+                            <table id="roleTimesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Участник</th>
+                                        <th>Минут</th>
+                                        <th>Вид времени</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                            <button type="button" id="addRole">
+                                Добавить участника
+                            </button>
+                            <button type="button" id="fillRoles">
+                                Подставить участников из п. 5
+                            </button>
 
-        <fieldset>
-          <legend>Раздел 4. Проблемы и документы</legend>
-          <p>Какие проблемы возникают *</p>
-          <div id="problemTypes">
-            <label><input type="checkbox" name="problems.types" value="Ошибки в расчётах или данных"> Ошибки в расчётах или данных</label>
-            <label><input type="checkbox" name="problems.types" value="Долгое ожидание клиента"> Долгое ожидание клиента</label>
-            <label><input type="checkbox" name="problems.types" value="Повторный ручной ввод данных"> Повторный ручной ввод данных</label>
-            <label><input type="checkbox" name="problems.types" value="Нет контроля, операционный риск"> Нет контроля, операционный риск</label>
-            <label><input type="checkbox" name="problems.types" value="Конфликты и жалобы клиентов"> Конфликты и жалобы клиентов</label>
-            <label><input type="checkbox" name="problems.types" value="Бумажный документооборот"> Бумажный документооборот</label>
-          </div>
-          <p><label>Опишите пример *<br>
-            <textarea name="problems.example" rows="3"></textarea>
-          </label></p>
-          <p><label>Какие проводки, документы и отчёты формируются *<br>
-            <textarea name="documents" rows="3"></textarea>
-          </label></p>
-        </fieldset>
+                            <p>Сколько длится ожидание за одну операцию *</p>
+                            <div class="row">
+                                <input
+                                    type="number"
+                                    name="wait.min"
+                                    min="0"
+                                    step="1"
+                                    value="0"
+                                />
+                                <select name="wait.who">
+                                    <option value="Клиент">Клиент</option>
+                                    <option value="Сотрудник">Сотрудник</option>
+                                    <option value="Клиент и сотрудник">
+                                        Клиент и сотрудник
+                                    </option>
+                                </select>
+                            </div>
+                        </fieldset>
 
-        <fieldset>
-          <legend>Раздел 5. Каким процесс должен стать</legend>
-          <p><label>Как должно быть после автоматизации * (что система делает сама, что остаётся сотруднику)<br>
-            <textarea name="tobe" rows="4"></textarea>
-          </label></p>
-          <p><label>Правила и расчёты * (тарифы, формулы, сроки, условия)<br>
-            <textarea name="rules" rows="4"></textarea>
-          </label></p>
-          <p><label>Ссылка на инструкцию или положение<br>
-            <input type="url" name="rulesLink">
-          </label></p>
-        </fieldset>
+                        <fieldset>
+                            <legend>Раздел 4. Проблемы и документы</legend>
+                            <p>Какие проблемы возникают *</p>
+                            <div id="problemTypes">
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="problems.types"
+                                        value="Ошибки в расчётах или данных"
+                                    />
+                                    Ошибки в расчётах или данных</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="problems.types"
+                                        value="Долгое ожидание клиента"
+                                    />
+                                    Долгое ожидание клиента</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="problems.types"
+                                        value="Повторный ручной ввод данных"
+                                    />
+                                    Повторный ручной ввод данных</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="problems.types"
+                                        value="Нет контроля, операционный риск"
+                                    />
+                                    Нет контроля, операционный риск</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="problems.types"
+                                        value="Конфликты и жалобы клиентов"
+                                    />
+                                    Конфликты и жалобы клиентов</label
+                                >
+                                <label
+                                    ><input
+                                        type="checkbox"
+                                        name="problems.types"
+                                        value="Бумажный документооборот"
+                                    />
+                                    Бумажный документооборот</label
+                                >
+                            </div>
+                            <p>
+                                <label
+                                    >Опишите пример *<br />
+                                    <textarea
+                                        name="problems.example"
+                                        rows="3"
+                                    ></textarea>
+                                </label>
+                            </p>
+                            <p>
+                                <label
+                                    >Какие проводки, документы и отчёты
+                                    формируются *<br />
+                                    <textarea
+                                        name="documents"
+                                        rows="3"
+                                    ></textarea>
+                                </label>
+                            </p>
+                        </fieldset>
 
-        <fieldset>
-          <legend>Раздел 6. Дополнительно (необязательно)</legend>
-          <details>
-            <summary>Развернуть</summary>
-            <p><label>Затрагивает ли задача клиента<br>
-              <textarea name="opt.client" rows="2"></textarea></label></p>
-            <p><label>Доход или объём продукта в месяц<br>
-              <input type="text" name="opt.income" placeholder="92 000 сом в месяц, 300 ячеек"></label></p>
-            <p><label>Потери от ошибок, штрафы, жалобы<br>
-              <textarea name="opt.losses" rows="2"></textarea></label></p>
-            <p><label>Как поймём, что стало лучше<br>
-              <input type="text" name="opt.target" placeholder="Оформление за 15 минут вместо 50"></label></p>
-            <p><label>Срок или требование регулятора<br>
-              <input type="text" name="opt.deadline"></label></p>
-            <p><label>Ссылки на схемы, скриншоты, образцы (по одной на строку)<br>
-              <textarea name="opt.links" rows="2"></textarea></label></p>
-          </details>
-        </fieldset>
+                        <fieldset>
+                            <legend>
+                                Раздел 5. Каким процесс должен стать
+                            </legend>
+                            <p>
+                                <label
+                                    >Как должно быть после автоматизации * (что
+                                    система делает сама, что остаётся
+                                    сотруднику)<br />
+                                    <textarea name="tobe" rows="4"></textarea>
+                                </label>
+                            </p>
+                            <p>
+                                <label
+                                    >Правила и расчёты * (тарифы, формулы,
+                                    сроки, условия)<br />
+                                    <textarea name="rules" rows="4"></textarea>
+                                </label>
+                            </p>
+                            <p>
+                                <label
+                                    >Ссылка на инструкцию или положение<br />
+                                    <input type="url" name="rulesLink" />
+                                </label>
+                            </p>
+                        </fieldset>
 
-      </div>
+                        <fieldset>
+                            <legend>
+                                Раздел 6. Дополнительно (необязательно)
+                            </legend>
+                            <details>
+                                <summary>Развернуть</summary>
+                                <p>
+                                    <label
+                                        >Затрагивает ли задача клиента<br />
+                                        <textarea
+                                            name="opt.client"
+                                            rows="2"
+                                        ></textarea>
+                                    </label>
+                                </p>
+                                <p>
+                                    <label
+                                        >Доход или объём продукта в месяц<br />
+                                        <input
+                                            type="text"
+                                            name="opt.income"
+                                            placeholder="92 000 сом в месяц, 300 ячеек"
+                                    /></label>
+                                </p>
+                                <p>
+                                    <label
+                                        >Потери от ошибок, штрафы, жалобы<br />
+                                        <textarea
+                                            name="opt.losses"
+                                            rows="2"
+                                        ></textarea>
+                                    </label>
+                                </p>
+                                <p>
+                                    <label
+                                        >Как поймём, что стало лучше<br />
+                                        <input
+                                            type="text"
+                                            name="opt.target"
+                                            placeholder="Оформление за 15 минут вместо 50"
+                                    /></label>
+                                </p>
+                                <p>
+                                    <label
+                                        >Срок или требование регулятора<br />
+                                        <input type="text" name="opt.deadline"
+                                    /></label>
+                                </p>
+                                <p>
+                                    <label
+                                        >Ссылки на схемы, скриншоты, образцы (по
+                                        одной на строку)<br />
+                                        <textarea
+                                            name="opt.links"
+                                            rows="2"
+                                        ></textarea>
+                                    </label>
+                                </p>
+                            </details>
+                        </fieldset>
+                    </div>
 
-      <!-- Раздел для типа "Баг": JS покажет его вместо разделов 2-6 -->
-      <fieldset id="bugSection">
-        <legend>Описание ошибки</legend>
-        <p><label>Где возникает ошибка * (экран, операция или отчёт)<br>
-          <input type="text" name="bug.where"></label></p>
-        <p><label>Шаги воспроизведения *<br>
-          <textarea name="bug.steps" rows="3" placeholder="1. Открыть… 2. Ввести… 3. Нажать…"></textarea></label></p>
-        <p><label>Что ожидалось *<br>
-          <textarea name="bug.expected" rows="2"></textarea></label></p>
-        <p><label>Что произошло на самом деле * (текст ошибки скопируйте полностью)<br>
-          <textarea name="bug.actual" rows="2"></textarea></label></p>
-        <p><label>Когда произошло *<br>
-          <input type="datetime-local" name="bug.when"></label></p>
-        <p><label>Критичность *<br>
-          <select name="bug.severity">
-            <option value="">Выберите</option>
-            <option value="blocker">Блокирует работу</option>
-            <option value="major">Мешает, есть обходной путь</option>
-            <option value="minor">Незначительная</option>
-          </select></label></p>
-        <p><label>Сколько клиентов или операций затронуто<br>
-          <input type="text" name="bug.affected"></label></p>
-        <p><label>Ссылки на скриншоты или файлы (по одной на строку)<br>
-          <textarea name="bug.links" rows="2"></textarea></label></p>
-      </fieldset>
+                    <!-- Раздел для типа "Баг": JS покажет его вместо разделов 2-6 -->
+                    <fieldset id="bugSection">
+                        <legend>Описание ошибки</legend>
+                        <p>
+                            <label
+                                >Где возникает ошибка * (экран, операция или
+                                отчёт)<br />
+                                <input type="text" name="bug.where"
+                            /></label>
+                        </p>
+                        <p>
+                            <label
+                                >Шаги воспроизведения *<br />
+                                <textarea
+                                    name="bug.steps"
+                                    rows="3"
+                                    placeholder="1. Открыть… 2. Ввести… 3. Нажать…"
+                                ></textarea>
+                            </label>
+                        </p>
+                        <p>
+                            <label
+                                >Что ожидалось *<br />
+                                <textarea
+                                    name="bug.expected"
+                                    rows="2"
+                                ></textarea>
+                            </label>
+                        </p>
+                        <p>
+                            <label
+                                >Что произошло на самом деле * (текст ошибки
+                                скопируйте полностью)<br />
+                                <textarea name="bug.actual" rows="2"></textarea>
+                            </label>
+                        </p>
+                        <p>
+                            <label
+                                >Когда произошло *<br />
+                                <input type="datetime-local" name="bug.when"
+                            /></label>
+                        </p>
+                        <p>
+                            <label
+                                >Критичность *<br />
+                                <select name="bug.severity">
+                                    <option value="">Выберите</option>
+                                    <option value="blocker">
+                                        Блокирует работу
+                                    </option>
+                                    <option value="major">
+                                        Мешает, есть обходной путь
+                                    </option>
+                                    <option value="minor">
+                                        Незначительная
+                                    </option>
+                                </select></label
+                            >
+                        </p>
+                        <p>
+                            <label
+                                >Сколько клиентов или операций затронуто<br />
+                                <input type="text" name="bug.affected"
+                            /></label>
+                        </p>
+                        <p>
+                            <label
+                                >Ссылки на скриншоты или файлы (по одной на
+                                строку)<br />
+                                <textarea name="bug.links" rows="2"></textarea>
+                            </label>
+                        </p>
+                    </fieldset>
 
-      <p id="message"></p>
-      <button type="submit">Отправить заявку</button>
-      <button type="button" id="clearForm">Очистить форму</button>
-            <button type="button" id="cancelEdit" hidden>Отменить изменение</button>
-    </form>
+                    <p id="message"></p>
+                    <button type="submit">Отправить заявку</button>
+                    <button type="button" id="clearForm">Очистить форму</button>
+                    <button type="button" id="cancelEdit" hidden>
+                        Отменить изменение
+                    </button>
+                </form>
 
-    <aside id="sidebar">
-      <h2>Оценка трудозатрат</h2>
-      <p id="calcResult">Заполните п. 7 и п. 8</p>
-      <h2>Обязательные поля: <span id="counter">0 из 13</span></h2>
-      <ul id="checklist"></ul>
-    </aside>
-  </div>
+                <aside id="sidebar">
+                    <h2>Оценка трудозатрат</h2>
+                    <p id="calcResult">Заполните п. 7 и п. 8</p>
+                    <h2>
+                        Обязательные поля: <span id="counter">0 из 13</span>
+                    </h2>
+                    <ul id="checklist"></ul>
+                </aside>
+            </div>
+        </section>
+        <section id="view-my" hidden></section>
+        <section id="view-all" hidden></section>
+        <section id="view-card" hidden></section>
 
-    </section>
-  <section id="view-my" hidden></section>
-  <section id="view-all" hidden></section>
-  <section id="view-card" hidden></section>
+        <!-- Шаблоны строк для динамических таблиц: на странице не показываются -->
+        <template id="stepRowTpl">
+            <tr>
+                <td><input type="text" class="step-who" /></td>
+                <td><textarea class="step-what" rows="2"></textarea></td>
+                <td>
+                    <select class="step-where">
+                        <option>АБС</option>
+                        <option>Excel</option>
+                        <option>Word</option>
+                        <option>Бумага</option>
+                        <option>Чат / мессенджер</option>
+                        <option>Почта</option>
+                        <option>Устно</option>
+                        <option>Другое</option>
+                    </select>
+                </td>
+                <td><button type="button" class="del-row">Удалить</button></td>
+            </tr>
+        </template>
 
-  <!-- Шаблоны строк для динамических таблиц: на странице не показываются -->
-  <template id="stepRowTpl">
-    <tr>
-      <td><input type="text" class="step-who"></td>
-      <td><textarea class="step-what" rows="2"></textarea></td>
-      <td>
-        <select class="step-where">
-          <option>АБС</option><option>Excel</option><option>Word</option>
-          <option>Бумага</option><option>Чат / мессенджер</option>
-          <option>Почта</option><option>Устно</option><option>Другое</option>
-        </select>
-      </td>
-      <td><button type="button" class="del-row">Удалить</button></td>
-    </tr>
-  </template>
+        <template id="roleRowTpl">
+            <tr>
+                <td><input type="text" class="role-name" /></td>
+                <td>
+                    <input type="number" class="role-min" min="1" step="1" />
+                </td>
+                <td>
+                    <select class="role-kind">
+                        <option value="op">на операцию</option>
+                        <option value="unit">на единицу</option>
+                    </select>
+                </td>
+                <td><button type="button" class="del-row">Удалить</button></td>
+            </tr>
+        </template>
 
-  <template id="roleRowTpl">
-    <tr>
-      <td><input type="text" class="role-name"></td>
-      <td><input type="number" class="role-min" min="1" step="1"></td>
-      <td><button type="button" class="del-row">Удалить</button></td>
-    </tr>
-  </template>
-
-    <script src="app.js"></script>
-  <script src="screens.js"></script>
-</body>
+        <script src="app.js"></script>
+        <script src="screens.js"></script>
+    </body>
 </html>
